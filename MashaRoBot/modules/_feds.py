@@ -885,9 +885,6 @@ async def fex(event):
  except Exception as e:
   print(e)
      
-file_help = os.path.basename(__file__)
-file_help = file_help.replace(".py", "")
-file_helpo = file_help.replace("_", " ")
 
 __help__ = """
 Ah, group management. It's all fun and games, until you start getting spammers in, and you need to ban them. Then you need to start banning more, and more, and it gets painful.
