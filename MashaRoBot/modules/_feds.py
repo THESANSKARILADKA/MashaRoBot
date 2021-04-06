@@ -46,18 +46,6 @@ BANNED_RIGHTS = ChatBannedRights(
 """
 Fully Written by RoseLoverX
 """
-
-async def is_admin(chat, user):
-    if isinstance(chat, (types.InputPeerChannel, types.InputChannel)):
-        return isinstance(
-            (
-                await tbot(functions.channels.GetParticipantRequest(chat, user))
-            ).participant,
-            (types.ChannelParticipantAdmin, types.ChannelParticipantCreator),
-        )
-    if isinstance(chat, types.InputPeerUser):
-        return True
-
 async def get_user_from_event(event):
     """ Get the user from argument or replied message. """
     if event.reply_to_msg_id:
@@ -106,12 +94,8 @@ def is_user_fed_owner(fed_id, user_id):
 
 
 """
-JNL
+Fully Written by RoseLoverX
 """
-@register(pattern="^/omk")
-async def _(event):
- return await event.reply("ok")
-
 @register(pattern="^/newfed ?(.*)")
 async def new(event):
  if not event.is_private:
@@ -348,7 +332,7 @@ async def fd(event):
 @register(pattern="^/fedinfo ?(.*)")
 async def info(event):
  if not event.is_private:
-   if not await is_admin(event.input_chat, event.sender_id):
+   if not await is_admin(event, event.sender_id):
      return await event.reply("This command can only be used in private.")
  input = event.pattern_match.group(1)
  fedowner = sql.get_user_owner_fed_full(event.sender_id)
@@ -372,26 +356,26 @@ async def info(event):
   getfchat = sql.all_fed_chats(fed_id)
   FEDADMIN = sql.all_fed_users(fed_id)
   TotalAdminFed = len(FEDADMIN)
-  try:
-     getmy = sql.get_mysubs(fed_id)
-  except:
-     getmy = []
+  
   caption = "Fed info:\n"
   caption += f"FedID: `{fed_id}`\n"
   caption += f"Name: {name}\n"
-  caption += f"Creator: [this person](tg://user?id={owner})\n"
+  caption += f"Creator: [this person](tg://user?id={owner}) (`{owner}`)\n"
   caption += f"Number of admins: `{TotalAdminFed}`\n"
   caption += f"Number of bans: `{len(getfban)}`\n"
   caption += f"Number of connected chats: `{len(getfchat)}`\n"
-  caption += f"Number of subscribed feds: `{len(getmy)}`"
   try:
-     subs = luv[fed_id]
+     subs = sql.get_subscriber(fed_id)
   except:
      subs = []
   caption += f"Number of subscribed feds: `{len(subs)}`"
-  if getmy == None:
+  try:
+    getmy = sql.get_mysubs(fed_id)
+  except:
+    getmy = []
+  if len(getmy) == 0:
    caption += "\n\nThis federation is not subscribed to any other feds."
-  if getmy:
+  else:
      caption += "\n\nSubscribed to the following feds:"
      for x in getmy:
                 nfo = sql.get_fed_info(x)
@@ -406,8 +390,9 @@ Fully Written by RoseLoverX
 """
 @tbot.on(events.CallbackQuery(pattern=r"fedadm(\_(.*))"))
 async def smex_fed(event):
-  if not await is_admin(event, event.sender_id):
-     return await event.answer("You need to be an admin to do this")
+  if event.is_group:
+    if not await is_admin(event, event.sender_id):
+      return await event.answer("You need to be an admin to do this")
   await event.edit(buttons=None)
   tata = event.pattern_match.group(1)
   data = tata.decode()
@@ -440,6 +425,7 @@ Fully Written by RoseLoverX
 """
 @register(pattern="^/fban ?(.*)")
 async def _(event):
+    
     user = event.sender
     chat = event.chat_id
     if event.is_group:
@@ -518,6 +504,10 @@ async def _(event):
        else:
          return await event.reply(f'User [{fname}](tg://user?id={r_sender_id}) is already banned in {name}, with reason:\n`{fbanreason}`.')
     if not fban:
+       current_datetime = datetime.now(pytz.timezone("Asia/Kolkata"))
+       kuk =  f"{current_datetime}"
+       mal = kuk[:10]
+       rec = mal.replace("-", "")
        x = sql.fban_user(
                 fed_id,
                 fban_user_id,
@@ -525,7 +515,7 @@ async def _(event):
                 fban_user_lname,
                 fban_user_uname,
                 reason,
-                int(time.time()),
+                int(rec),
             )
        sax = "**New FedBan**\n"
        sax += f"**Fed:** {name}\n"
@@ -534,6 +524,10 @@ async def _(event):
        sax += f"**User ID:** `{r_sender_id}`\n"
        sax += f"**Reason:** {reason}"
     else:
+            current_datetime = datetime.now(pytz.timezone("Asia/Kolkata"))
+            kuk =  f"{current_datetime}"
+            mal = kuk[:10]
+            rec = mal.replace("-", "")
             fed_name = info["fname"]
             temp = sql.un_fban_user(fed_id, fban_user_id)
             if not temp:
@@ -546,7 +540,7 @@ async def _(event):
                 fban_user_lname,
                 fban_user_uname,
                 reason,
-                int(time.time()),
+                int(rec),
             )
             sax = "**FedBan Reason Update**\n"
             sax += f"**Fed:** {name}\n"
@@ -746,12 +740,13 @@ async def sub(event):
  if args == fed_id:
    return await event.reply("... What's the point in subscribing a fed to itself?")
  try:
-   subs = luv[fed_id]
+   subs = sql.MYFEDS_SUBSCRIBER
  except:
    subs = []
- if len(subs) > 5:
+ if len(subs) >= 5:
   return await event.reply("You can subscribe to at most 5 federations. Please unsubscribe from other federations before adding more.")
  subfed = sql.subs_fed(args, fed_id)
+ addsub = sql.add_sub(fed_id, args)
  await event.reply(f"Federation {name} has now subscribed to {sname}. All fedbans in {sname} will now take effect in both feds.")
 
 """
@@ -775,15 +770,16 @@ async def unsub(event):
  if not getfed:
     return await event.reply("This FedID does not refer to an existing federation.")
  sname = getfed["fname"]
+ remsub = sql.rem_sub(fed_id, args)
  unsubfed = sql.unsubs_fed(args, fed_id)
  await event.reply(f"Federation {name} is no longer subscribed to {sname}. Bans in {sname} will no longer be applied.\nPlease note that any bans that happened because the user was banned from the subfed will need to be removed manually.")
  
-@register(pattern="^/fstat ?(.*)")
+@register(pattern="^/(fstat|fbanstat) ?(.*)")
 async def fstat(event):
  if event.is_group:
    if not await is_admin(event, event.sender_id):
      return await event.reply("You need to be an admin to do this!")
- args = event.pattern_match.group(1)
+ args = event.pattern_match.group(2)
  if args:
   if len(args) > 12:
     info = sql.get_fed_info(args)
@@ -797,6 +793,18 @@ async def fstat(event):
     else:
         user_id = event.sender_id
         fname = event.sender.first_name
+    fban, fbanreason, fbantime = sql.get_fban_user(args, int(user_id))
+    if not fban:
+      return await event.reply(f"{fname} is not banned in this fed.")
+    tym = fbantime
+    k = f"{tym}"
+    re = k[:4]
+    rs = f"{k[:4]}/{k[-2:]}/{k[:6].replace(re, '')}"
+    if fbanreason == '':
+       text = f"{fname} is currently banned in {name}.\n\n**Date of Ban:** {rs}"
+    if not fbanreason == '':
+       text = f"{fname} is currently banned in {name},for the following **reason**:\n{fbanreason}\n\n**Date of Ban:** {rs}"
+    return await event.reply(text)
   elif len(args) < 12:
    person = await get_user_from_event(event)
    user_id = person.id
@@ -810,7 +818,110 @@ async def fstat(event):
    else:
       user_id = event.sender_id
       fname = event.sender.first_name
- mex = event.reply(f"Checking fbans for {fname}...")
+ mex = await event.reply(f"Checking fbans for {fname}...")
  uname, fbanlist = sql.get_user_fbanlist(str(user_id))
  if len(fbanlist) == 0:
    return await mex.edit(f"User {fname} hasn't been banned in any chats due to fedbans.")
+ if len(fbanlist) <= 10:
+  flist = f"The following federations have caused {fname} to be banned in chats:"
+  for x in fbanlist:
+   try:
+     info = sql.get_fed_info(x[0])
+     gname = info["fname"]
+     flist += f"\n- `{x[0]}`:{gname}"
+   except:
+     pass
+  await mex.edit(flist)
+    
+
+"""
+Fully Written by RoseLoverX aka AmarnathCdj
+"""
+
+
+@register(pattern="^/fedexport$")
+async def fex(event):
+ if event.is_group:
+  fed_id = sql.get_fed_id(event.chat_id)
+  if not fed_id:
+       return await event.reply("This chat isn't in any federations.")
+  else:
+     if is_user_fed_owner(fed_id, int(event.sender_id)) is False:
+        return await event.reply("Only the fed creator can export the ban list.")
+ else:
+  fedowner = sql.get_user_owner_fed_full(event.sender_id)
+  if not fedowner:
+          return await event.reply("It doesn't look like you have a federation yet!")
+  for f in fedowner:
+          fed_id = f["fed_id"]
+ info = sql.get_fed_info(fed_id)
+ name = info["fname"]
+ getfban = sql.get_all_fban_users(fed_id)
+ if len(getfban) == 0:
+  return await event.reply(f"There are no banned users in {name}")
+ backups = ""
+ try:
+            for users in getfban:
+                getuserinfo = sql.get_all_fban_users_target(fed_id, users)
+                json_parser = {
+                    "user_id": users,
+                    "first_name": getuserinfo["first_name"],
+                    "last_name": getuserinfo["last_name"],
+                    "user_name": getuserinfo["user_name"],
+                    "reason": getuserinfo["reason"],
+                }
+                backups += json.dumps(json_parser)
+                backups += "\n"
+            with BytesIO(str.encode(backups)) as output:
+                output.name = "fbanned_users.json"
+                await tbot.send_file(
+                    event.chat_id,
+                    file=output,
+                    filename="fbanned_users.json",
+                    caption="Total {} users are blocked by the Federation {}.".format(
+                        len(getfban), info["fname"]
+                    ),
+                )
+ except Exception as e:
+  print(e)
+     
+file_help = os.path.basename(__file__)
+file_help = file_help.replace(".py", "")
+file_helpo = file_help.replace("_", " ")
+
+__help__ = """
+Ah, group management. It's all fun and games, until you start getting spammers in, and you need to ban them. Then you need to start banning more, and more, and it gets painful.
+But then you have multiple groups, and you don't want these spammers in any of your groups - how can you deal? Do you have to ban them manually, in all your groups?
+No more! With federations, you can make a ban in one chat overlap to all your other chats.
+You can even appoint federation admins, so that your trustworthiest admins can ban across all the chats that you want to protect.
+Commands:
+- /newfed <fedname>: Creates a new federation with the given name. Only one federation per user. Max 64 chars name allowed.
+- /delfed: Deletes your federation, and any information related to it. Will not unban any banned users.
+- /fedtransfer <reply/username/mention/userid>: Transfer your federation to another user.
+- /renamefed <newname>: Rename your federation.
+- /fedinfo <FedID>: Information about a federation.
+- /fedadmins <FedID>: List the admins in a federation.
+- /fedsubs <FedID>: List all federations your federation is subscribed to.
+- /joinfed <FedID>: Join the current chat to a federation. A chat can only join one federation. Chat owners only.
+- /leavefed: Leave the current federation. Only chat owners can do this.
+- /fedstat: List all the federations you are banned in.
+- /fedstat <user ID>: List all the federations a user has been banned in.
+- /fedstat <user ID> <FedID>: Gives information about a user's ban in a federation.
+- /chatfed: Information about the federation the current chat is in.
+Federation admin commands:
+- /fban: Bans a user from the current chat's federation
+- /unfban: Unbans a user from the current chat's federation
+- /feddemoteme <FedID>: Demote yourself from a fed.
+- /myfeds: List all your feds.
+Federation owner commands:
+- /fpromote: Promote a user to fedadmin in your fed.
+- /fdemote: Demote a federation admin in your fed.
+- /fednotif <yes/no/on/off>: Whether or not to receive PM notifications of every fed action.
+- /subfed <FedId>: Subscribe your federation to another. Users banned in the subscribed fed will also be banned in this one.
+- /unsubfed <FedId>: Unsubscribes your federation from another. Bans from the other fed will no longer take effect.
+- /fedexport <csv/json>: Displays all users who are victimized at the Federation at this time.
+- /fedimport: Import a list of banned users.
+- /setfedlog <FedId>: Sets the current chat as the federation log. All federation events will be logged here.
+- /unsetfedlog <FedId>: Unset the federation log. Events will no longer be logged.
+
+__mod_name__ = "FEDERATION"
