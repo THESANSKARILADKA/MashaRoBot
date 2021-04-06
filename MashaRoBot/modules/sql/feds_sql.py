@@ -41,7 +41,7 @@ class BansF(BASE):
     last_name = Column(UnicodeText)
     user_name = Column(UnicodeText)
     reason = Column(UnicodeText, default="")
-    time = Column(Integer, default=0)
+    time = Column(UnicodeText, default="")
 
     def __init__(self, fed_id, user_id, first_name, last_name, user_name, reason, time):
         self.fed_id = fed_id
@@ -718,6 +718,18 @@ def subs_fed(fed_id, my_fed):
             FEDS_SUBSCRIBER.get(fed_id, set()).add(my_fed)
         return True
 
+def add_sub(my_fed, fed_id):
+     
+        mime = FedSubs(my_fed, fed_id)
+
+        SESSION.merge(mime)  # merge to avoid duplicate key issues
+        SESSION.commit()
+        global MYFEDS_SUBSCRIBER
+        if MYFEDS_SUBSCRIBER.get(my_fed, set()) == set():
+            MYFEDS_SUBSCRIBER[my_fed] = {fed_id}
+        else:
+            MYFEDS_SUBSCRIBER.get(my_fed, set()).add(fed_id)
+        return True
 
 def unsubs_fed(fed_id, my_fed):
     with FEDS_SUBSCRIBER_LOCK:
@@ -733,6 +745,19 @@ def unsubs_fed(fed_id, my_fed):
         SESSION.close()
         return False
 
+def rem_sub(my_fed, fed_id):
+  
+        sox = SESSION.query(FedSubs).get((my_fed, fed_id))
+        if sox:
+            if fed_id in MYFEDS_SUBSCRIBER.get(my_fed, set()):  # sanity check
+                MYFEDS_SUBSCRIBER.get(my_fed, set()).remove(fed_id)
+
+            SESSION.delete(sox)
+            SESSION.commit()
+            return True
+
+        SESSION.close()
+        return False
 
 def get_all_subs(fed_id):
     return FEDS_SUBSCRIBER.get(fed_id, set())
@@ -839,7 +864,6 @@ def __load_all_feds_banned():
             }
     finally:
         SESSION.close()
-
 
 def __load_all_feds_settings():
     global FEDERATION_NOTIFICATION
