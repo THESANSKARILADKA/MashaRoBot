@@ -886,12 +886,14 @@ async def fex(event):
   print(e)
      
 
+__mod_name__ = "FEDERATION"
+
 __help__ = """
 Ah, group management. It's all fun and games, until you start getting spammers in, and you need to ban them. Then you need to start banning more, and more, and it gets painful.
 But then you have multiple groups, and you don't want these spammers in any of your groups - how can you deal? Do you have to ban them manually, in all your groups?
 No more! With federations, you can make a ban in one chat overlap to all your other chats.
 You can even appoint federation admins, so that your trustworthiest admins can ban across all the chats that you want to protect.
-Commands:
+*Commands:*\n
 - /newfed <fedname>: Creates a new federation with the given name. Only one federation per user. Max 64 chars name allowed.
 - /delfed: Deletes your federation, and any information related to it. Will not unban any banned users.
 - /fedtransfer <reply/username/mention/userid>: Transfer your federation to another user.
@@ -921,4 +923,66 @@ Federation owner commands:
 - /setfedlog <FedId>: Sets the current chat as the federation log. All federation events will be logged here.
 - /unsetfedlog <FedId>: Unset the federation log. Events will no longer be logged.
 
-__mod_name__ = "FEDERATION"
+"""
+
+NEW_FED_HANDLER = CommandHandler("newfed", new_fed)
+DEL_FED_HANDLER = CommandHandler("delfed", del_fed)
+RENAME_FED = CommandHandler("renamefed", rename_fed)
+JOIN_FED_HANDLER = CommandHandler("joinfed", join_fed)
+LEAVE_FED_HANDLER = CommandHandler("leavefed", leave_fed)
+PROMOTE_FED_HANDLER = CommandHandler("fpromote", user_join_fed)
+DEMOTE_FED_HANDLER = CommandHandler("fdemote", user_demote_fed)
+INFO_FED_HANDLER = CommandHandler("fedinfo", fed_info)
+BAN_FED_HANDLER = DisableAbleCommandHandler("fban", fed_ban)
+UN_BAN_FED_HANDLER = CommandHandler("unfban", unfban)
+FED_BROADCAST_HANDLER = CommandHandler("fbroadcast", fed_broadcast)
+FED_SET_RULES_HANDLER = CommandHandler("setfrules", set_frules)
+FED_GET_RULES_HANDLER = CommandHandler("frules", get_frules)
+FED_CHAT_HANDLER = CommandHandler("chatfed", fed_chat)
+FED_ADMIN_HANDLER = CommandHandler("fedadmins", fed_admin)
+FED_USERBAN_HANDLER = CommandHandler("fbanlist", fed_ban_list)
+FED_NOTIF_HANDLER = CommandHandler("fednotif", fed_notif)
+FED_CHATLIST_HANDLER = CommandHandler("fedchats", fed_chats)
+FED_IMPORTBAN_HANDLER = CommandHandler("importfbans", fed_import_bans)
+FEDSTAT_USER = DisableAbleCommandHandler(["fedstat", "fbanstat"], fed_stat_user)
+SET_FED_LOG = CommandHandler("setfedlog", set_fed_log)
+UNSET_FED_LOG = CommandHandler("unsetfedlog", unset_fed_log)
+SUBS_FED = CommandHandler("subfed", subs_feds)
+UNSUBS_FED = CommandHandler("unsubfed", unsubs_feds)
+MY_SUB_FED = CommandHandler("fedsubs", get_myfedsubs)
+MY_FEDS_LIST = CommandHandler("myfeds", get_myfeds_list)
+DELETEBTN_FED_HANDLER = CallbackQueryHandler(del_fed_button, pattern=r"rmfed_")
+FED_OWNER_HELP_HANDLER = CommandHandler("fedownerhelp", fed_owner_help)
+FED_ADMIN_HELP_HANDLER = CommandHandler("fedadminhelp", fed_admin_help)
+FED_USER_HELP_HANDLER = CommandHandler("feduserhelp", fed_user_help)
+
+dispatcher.add_handler(NEW_FED_HANDLER)
+dispatcher.add_handler(DEL_FED_HANDLER)
+dispatcher.add_handler(RENAME_FED)
+dispatcher.add_handler(JOIN_FED_HANDLER)
+dispatcher.add_handler(LEAVE_FED_HANDLER)
+dispatcher.add_handler(PROMOTE_FED_HANDLER)
+dispatcher.add_handler(DEMOTE_FED_HANDLER)
+dispatcher.add_handler(INFO_FED_HANDLER)
+dispatcher.add_handler(BAN_FED_HANDLER)
+dispatcher.add_handler(UN_BAN_FED_HANDLER)
+dispatcher.add_handler(FED_BROADCAST_HANDLER)
+dispatcher.add_handler(FED_SET_RULES_HANDLER)
+dispatcher.add_handler(FED_GET_RULES_HANDLER)
+dispatcher.add_handler(FED_CHAT_HANDLER)
+dispatcher.add_handler(FED_ADMIN_HANDLER)
+dispatcher.add_handler(FED_USERBAN_HANDLER)
+dispatcher.add_handler(FED_NOTIF_HANDLER)
+dispatcher.add_handler(FED_CHATLIST_HANDLER)
+# dispatcher.add_handler(FED_IMPORTBAN_HANDLER)
+dispatcher.add_handler(FEDSTAT_USER)
+dispatcher.add_handler(SET_FED_LOG)
+dispatcher.add_handler(UNSET_FED_LOG)
+dispatcher.add_handler(SUBS_FED)
+dispatcher.add_handler(UNSUBS_FED)
+dispatcher.add_handler(MY_SUB_FED)
+dispatcher.add_handler(MY_FEDS_LIST)
+dispatcher.add_handler(DELETEBTN_FED_HANDLER)
+dispatcher.add_handler(FED_OWNER_HELP_HANDLER)
+dispatcher.add_handler(FED_ADMIN_HELP_HANDLER)
+dispatcher.add_handler(FED_USER_HELP_HANDLER)
