@@ -343,7 +343,7 @@ async def fd(event):
 @register(pattern="^/fedinfo ?(.*)")
 async def info(event):
  if not event.is_private:
-   if not await is_admin(event, event.sender_id):
+   if not await is_admin(event.input_chat, event.sender_id):
      return await event.reply("This command can only be used in private.")
  input = event.pattern_match.group(1)
  fedowner = sql.get_user_owner_fed_full(event.sender_id)
