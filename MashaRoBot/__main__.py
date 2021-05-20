@@ -74,14 +74,14 @@ def get_readable_time(seconds: int) -> str:
 
 
 PM_START_TEXT = """
-`Hellow` [🤗](https://telegra.ph/file/754a36d8c2e2b01f2a3a9.png) `My name is` *Alita*
+`Hellow` [🤗] `My name is` *Tracy*
 `I'm here to help you manage your groups! Hit` *📚Commands* `button below to find out more about how to use me to my full potential.` 
 """
 
 buttons = [
     [
         InlineKeyboardButton(
-            text="➕️ ADD ALITA TO YOUR GROUP ➕️", url="t.me/AlitaRobot?startgroup=true"),
+            text="➕️ ADD TRACY TO YOUR GROUP ➕️", url="t.me/TracyRobot?startgroup=true"),
     ],
     [
         InlineKeyboardButton(text="ℹ️ ABOUT", callback_data="masha_"),
@@ -91,23 +91,23 @@ buttons = [
         InlineKeyboardButton(
             text="💾 SOURCE", callback_data="source_"),
         InlineKeyboardButton(
-            text="👥 SUPPORT", url="https://t.me/AlitaSupport"
+            text="👥 OWNER", url="https://t.me/Karan_xD"
         ),
     ],
 ]
 
 
 HELP_STRINGS = """
-`Hi.. I'm` [Alita🙋‍♀️](https://telegra.ph/file/754a36d8c2e2b01f2a3a9.png)
+`Hi.. I'm` [Tracy🙋‍♀️]
 `Click on the buttons below to get documentation about specific modules..`"""
 
 
-MASHA_IMG = "https://telegra.ph/file/754a36d8c2e2b01f2a3a9.png"
+MASHA_IMG = "https://telegra.ph/file/df45fd93fad4348976fd9.jpg"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
- You can support the project via [Telegram](t.me/Eviral) or by contacting @Eviral \
+ You can support the project via [Telegram](t.me/Karan_xd) or by contacting @Karan_xd \
  Supporting isnt always financial! \
- Those who cannot provide monetary support are welcome to help us develop the bot at @AlitaDevs."""
+ Those who cannot provide monetary support are welcome to help us develop the bot."""
 
 IMPORTED = {}
 MIGRATEABLE = []
